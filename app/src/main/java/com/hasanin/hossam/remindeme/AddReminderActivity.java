@@ -25,11 +25,35 @@ public class AddReminderActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_reminder);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        Integer hours = getIntent().getIntExtra("hours" , 0);
+        Integer minutes = getIntent().getIntExtra("minutes" , 0);
+        Integer getRepeat = getIntent().getIntExtra("repeat" , -1);
+        String getDescription = getIntent().getStringExtra("description");
 
         TimePicker timePicker = findViewById(R.id.timePicker);
         Switch repeat = findViewById(R.id.repeat);
         EditText desciption = findViewById(R.id.description);
         Button save = findViewById(R.id.save);
+
+        if (hours != 0 && minutes != 0){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                timePicker.setHour(hours);
+                timePicker.setMinute(minutes);
+            } else {
+                timePicker.setCurrentHour(hours);
+                timePicker.setCurrentMinute(minutes);
+            }
+        }
+        if (getRepeat == 1){
+            repeat.setChecked(true);
+        } else {
+            repeat.setChecked(false);
+        }
+        if (getDescription != null){
+            desciption.setText(getDescription);
+        }
 
         alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 

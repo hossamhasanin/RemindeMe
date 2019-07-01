@@ -1,20 +1,28 @@
 package com.hasanin.hossam.remindeme;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.sql.Time;
 import java.util.ArrayList;
@@ -26,19 +34,27 @@ public class RemindersRecAdapter extends RecyclerView.Adapter<RemindersRecAdapte
     ArrayList<ReminderModel> allReminders;
     RemindersDB remindersDB;
     AlarmManager alarmManager;
+    FloatingActionButton close;
+    FloatingActionButton delete;
+    FloatingActionButton add;
 
     Calendar rightNow;
     int currentHour;
     int currentMinute;
     Calendar calendar;
+    private ArrayList<ReminderModel> choosen;
 
-    public RemindersRecAdapter(Activity activity , ArrayList<ReminderModel> allReminders , RemindersDB remindersDB , AlarmManager alarmManager){
+    public RemindersRecAdapter(Activity activity , ArrayList<ReminderModel> allReminders , RemindersDB remindersDB , AlarmManager alarmManager , FloatingActionButton close , FloatingActionButton delete , FloatingActionButton add){
         this.activity = activity;
         this.allReminders = allReminders;
         this.remindersDB = remindersDB;
         this.alarmManager = alarmManager;
+        this.close = close;
+        this.delete = delete;
+        this.add = add;
 
         rightNow = Calendar.getInstance();
+        choosen = new ArrayList<>();
     }
 
 
@@ -50,6 +66,7 @@ public class RemindersRecAdapter extends RecyclerView.Adapter<RemindersRecAdapte
         return new ReminderViewHolder(view);
     }
 
+    @SuppressLint("RestrictedApi")
     @Override
     public void onBindViewHolder(@NonNull ReminderViewHolder holder, int position) {
 
@@ -98,8 +115,90 @@ public class RemindersRecAdapter extends RecyclerView.Adapter<RemindersRecAdapte
             }
         });
 
+        holder.container.setOnLongClickListener(c -> {
+            if (!choosen.contains(allReminders.get(position))){
+                add.setVisibility(View.GONE);
+                close.setVisibility(View.VISIBLE);
+                delete.setVisibility(View.VISIBLE);
+
+                choosen.add(allReminders.get(position));
+                holder.container.setBackgroundColor(activity.getResources().getColor(R.color.colorPrimary));
+                holder.description.setTextColor(Color.WHITE);
+                holder.time.setTextColor(Color.DKGRAY);
+            }
+            return true;
+        });
+
+        holder.container.setOnClickListener(l -> {
+            if (!choosen.isEmpty() && choosen.contains(allReminders.get(position))){
+                choosen.remove(allReminders.get(position));
+                holder.container.setBackgroundColor(Color.WHITE);
+                holder.description.setTextColor(Color.BLACK);
+                holder.time.setTextColor(Color.GRAY);
+                if (choosen.isEmpty()){
+                    add.setVisibility(View.VISIBLE);
+                    close.setVisibility(View.GONE);
+                    delete.setVisibility(View.GONE);
+                }
+            } else if (!choosen.isEmpty() && !choosen.contains(allReminders.get(position))){
+                choosen.add(allReminders.get(position));
+                holder.container.setBackgroundColor(activity.getResources().getColor(R.color.colorPrimary));
+                holder.description.setTextColor(Color.WHITE);
+                holder.time.setTextColor(Color.DKGRAY);
+            } else {
+                showReminderCard(position);
+            }
+
+        });
+
     }
 
+    public ArrayList<ReminderModel> getChoosen(){
+        return choosen;
+    }
+
+    private void showReminderCard(Integer position){
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        View layout = activity.getLayoutInflater().inflate(R.layout.show_reminder , null);
+        TextView description = layout.findViewById(R.id.show_desc);
+        TextView time = layout.findViewById(R.id.show_time);
+        Button edit = layout.findViewById(R.id.edit);
+        Button delete = layout.findViewById(R.id.delete_item);
+        description.setText(allReminders.get(position).getDescription());
+        time.setText(allReminders.get(position).getTime());
+        builder.setView(layout);
+        Dialog dialog = builder.create();
+        edit.setOnClickListener(e -> {
+            Intent intent = new Intent(activity , AddReminderActivity.class);
+            intent.putExtra("hours" , allReminders.get(position).getHours());
+            intent.putExtra("minutes" , allReminders.get(position).getMinutes());
+            intent.putExtra("description" , allReminders.get(position).getDescription());
+            intent.putExtra("repeat" , allReminders.get(position).getRepeat());
+            activity.startActivity(intent);
+        });
+        delete.setOnClickListener(d -> {
+            boolean t = remindersDB.deleteReminder(allReminders.get(position).getId());
+
+            Intent reminderReceiver = new Intent(activity , ReminderReceiver.class);
+            reminderReceiver.putExtra("description" , allReminders.get(position).getDescription());
+            reminderReceiver.putExtra("reminderId" , allReminders.get(position).getId());
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(activity , allReminders.get(position).getId() , reminderReceiver , 0);
+            alarmManager.cancel(pendingIntent);
+
+            notifyItemRemoved(position);
+            allReminders.remove(allReminders.get(position));
+
+            if (allReminders.isEmpty()){
+                if (MainActivity.instance().emptyMess.getVisibility() == View.GONE)
+                    MainActivity.instance().emptyMess.setVisibility(View.VISIBLE);
+                if (MainActivity.instance().remindersList.getVisibility() == View.VISIBLE)
+                    MainActivity.instance().remindersList.setVisibility(View.GONE);
+            }
+
+            dialog.dismiss();
+        });
+        dialog.show();
+    }
 
     @Override
     public int getItemCount() {

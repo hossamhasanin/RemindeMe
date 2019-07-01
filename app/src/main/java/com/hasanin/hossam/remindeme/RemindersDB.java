@@ -105,5 +105,16 @@ public class RemindersDB extends SQLiteOpenHelper {
         db.execSQL("update reminder set active = "+ status +" where id = " + id);
     }
 
+    public boolean deleteReminder(Integer id){
+        SQLiteDatabase db = this.getWritableDatabase();
+        try {
+            db.execSQL("DELETE FROM reminder WHERE id = " + id);
+            return true;
+        }catch (Exception e){
+            System.out.println(e);
+            return false;
+        }
+    }
+
 
 }

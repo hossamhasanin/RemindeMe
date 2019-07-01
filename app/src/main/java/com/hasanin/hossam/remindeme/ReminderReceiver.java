@@ -57,7 +57,7 @@ public class ReminderReceiver extends BroadcastReceiver {
 
         AlarmManager alarmManager = (AlarmManager) mainActivity.getSystemService(Context.ALARM_SERVICE);
         mainActivity.allReminders = remindersDB.getAllReminders();
-        mainActivity.remindersRecAdapter = new RemindersRecAdapter(mainActivity , mainActivity.allReminders , remindersDB , alarmManager);
+        mainActivity.remindersRecAdapter = new RemindersRecAdapter(mainActivity , mainActivity.allReminders , remindersDB , alarmManager , mainActivity.close , mainActivity.delete , mainActivity.addReminder);
         mainActivity.remindersList.setAdapter(mainActivity.remindersRecAdapter);
         mainActivity.remindersList.setLayoutManager(new LinearLayoutManager(mainActivity));
 
