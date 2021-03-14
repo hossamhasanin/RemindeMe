@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
@@ -27,6 +28,7 @@ public class AddReminderActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_reminder);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        Integer id = getIntent().getIntExtra("id" , 0);
         Integer hours = getIntent().getIntExtra("hours" , 0);
         Integer minutes = getIntent().getIntExtra("minutes" , 0);
         Integer getRepeat = getIntent().getIntExtra("repeat" , -1);
@@ -71,17 +73,32 @@ public class AddReminderActivity extends AppCompatActivity {
             Calendar calendar = Calendar.getInstance();
             Calendar now = Calendar.getInstance();
 
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 calendar.set(Calendar.HOUR_OF_DAY , timePicker.getHour());
                 calendar.set(Calendar.MINUTE , timePicker.getMinute());
-
-                remindersDB.InsertNewReminder(timePicker.getHour() + " : " + timePicker.getMinute() , desciption.getText().toString() , timePicker.getHour() , timePicker.getMinute() , isRepeat , calendar.getTimeInMillis());
+                if (getDescription == null) {
+                    remindersDB.InsertNewReminder(timePicker.getHour() + " : " + timePicker.getMinute(), desciption.getText().toString(), timePicker.getHour(), timePicker.getMinute(), isRepeat, calendar.getTimeInMillis());
+                } else {
+                    remindersDB.updateReminder(id , timePicker.getHour() + " : " + timePicker.getMinute(), desciption.getText().toString(), timePicker.getHour(), timePicker.getMinute(), isRepeat, calendar.getTimeInMillis());
+                }
             } else {
                 calendar.set(Calendar.MINUTE , timePicker.getCurrentHour());
                 calendar.set(Calendar.MINUTE , timePicker.getCurrentMinute());
-                remindersDB.InsertNewReminder(timePicker.getCurrentHour() + " : " + timePicker.getCurrentMinute() , desciption.getText().toString() , timePicker.getCurrentHour() , timePicker.getCurrentMinute() , isRepeat , calendar.getTimeInMillis());
+                if (getDescription == null) {
+                    remindersDB.InsertNewReminder(timePicker.getCurrentHour() + " : " + timePicker.getCurrentMinute(), desciption.getText().toString(), timePicker.getCurrentHour(), timePicker.getCurrentMinute(), isRepeat, calendar.getTimeInMillis());
+                } else {
+                    remindersDB.updateReminder(id , timePicker.getCurrentHour() + " : " + timePicker.getCurrentMinute(), desciption.getText().toString(), timePicker.getCurrentHour(), timePicker.getCurrentMinute(), isRepeat, calendar.getTimeInMillis());
+                }
             }
-            int reminderId = lastId+1;
+
+            int reminderId = 0;
+            if (getDescription == null) {
+                reminderId = lastId + 1;
+            } else {
+                reminderId = id;
+            }
+
             Intent reminderReceiver = new Intent(getApplicationContext() , ReminderReceiver.class);
             reminderReceiver.putExtra("description" , desciption.getText().toString());
             reminderReceiver.putExtra("reminderId" , reminderId);
@@ -92,6 +109,10 @@ public class AddReminderActivity extends AppCompatActivity {
                 time += 86400000L;
             }
 
+            if (getDescription != null) {
+                alarmManager.cancel(pendingIntent);
+            }
+
             if (repeat.isChecked()){
                 alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP , time , AlarmManager.INTERVAL_DAY , pendingIntent);
             } else {
@@ -99,7 +120,7 @@ public class AddReminderActivity extends AppCompatActivity {
             }
 
 
-            Toast.makeText(getApplicationContext() , "Added the reminder successfully :)" , Toast.LENGTH_LONG).show();
+            //Toast.makeText(getApplicationContext() , "Added the reminder successfully :)" , Toast.LENGTH_LONG).show();
             Intent mainActivity = new Intent(AddReminderActivity.this , MainActivity.class);
             startActivity(mainActivity);
         });

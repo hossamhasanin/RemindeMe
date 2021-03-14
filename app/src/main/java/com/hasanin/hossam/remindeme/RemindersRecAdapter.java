@@ -54,6 +54,7 @@ public class RemindersRecAdapter extends RecyclerView.Adapter<RemindersRecAdapte
         this.add = add;
 
         rightNow = Calendar.getInstance();
+        calendar = Calendar.getInstance();
         choosen = new ArrayList<>();
     }
 
@@ -78,8 +79,8 @@ public class RemindersRecAdapter extends RecyclerView.Adapter<RemindersRecAdapte
             holder.active.setChecked(false);
         }
 
-        //calendar.set(Calendar.HOUR_OF_DAY , allReminders.get(position).getHours());
-        //calendar.set(Calendar.MINUTE , allReminders.get(position).getMinutes());
+        calendar.set(Calendar.HOUR_OF_DAY , allReminders.get(position).getHours());
+        calendar.set(Calendar.MINUTE , allReminders.get(position).getMinutes());
         holder.active.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked){
                 remindersDB.UpdateActivityStatus(allReminders.get(position).getId(), 1);
@@ -170,6 +171,7 @@ public class RemindersRecAdapter extends RecyclerView.Adapter<RemindersRecAdapte
         Dialog dialog = builder.create();
         edit.setOnClickListener(e -> {
             Intent intent = new Intent(activity , AddReminderActivity.class);
+            intent.putExtra("id" , allReminders.get(position).getId());
             intent.putExtra("hours" , allReminders.get(position).getHours());
             intent.putExtra("minutes" , allReminders.get(position).getMinutes());
             intent.putExtra("description" , allReminders.get(position).getDescription());

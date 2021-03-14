@@ -105,6 +105,11 @@ public class RemindersDB extends SQLiteOpenHelper {
         db.execSQL("update reminder set active = "+ status +" where id = " + id);
     }
 
+    public void updateReminder(Integer id , String time , String desc , Integer hours , Integer minutes , Integer repeat , long timeInMiliSecond){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("UPDATE reminder SET time = '"+ time +"' , description = '"+ desc +"' , hours = "+ hours +" , minutes = "+ minutes +" , repeat = "+ repeat +" , timeInMiliSecond = "+ timeInMiliSecond +" WHERE id = " + id);
+    }
+
     public boolean deleteReminder(Integer id){
         SQLiteDatabase db = this.getWritableDatabase();
         try {

@@ -62,7 +62,7 @@ public class ReminderReceiver extends BroadcastReceiver {
         mainActivity.remindersList.setLayoutManager(new LinearLayoutManager(mainActivity));
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, ADMIN_CHANNEL_ID)
-                .setSmallIcon(R.mipmap.ic_launcher_round)
+                .setSmallIcon(R.drawable.ic_logo_luncher)
                 .setContentTitle("Hey you have a reminder") //the "title" value you sent in your notification
                 .setContentText(intent.getStringExtra("description")) //ditto
                 .setVibrate(new long[]{1000 , 1000 , 1000 , 1000 , 1000})
